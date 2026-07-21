@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌾 Ферма </title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      user-select: none;
+    }
+
+    body {
+      background: linear-gradient(145deg, #1e4b3c, #2a6b5a);
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Segoe UI', Roboto, system-ui, sans-serif;
+      touch-action: manipulation;
+      padding: 16px;
+    }
+
+    .game-wrapper {
+      background: #8cb87a;
+      background-image: radial-gradient(circle at 20% 30%, #a8d094, #6f9a5c);
+      padding: 24px 20px 30px;
+      border-radius: 70px 70px 50px 50px;
+      box-shadow: 0 20px 30px rgba(0,0,0,0.5), inset 0 -6px 0 #4f7a3e;
+      max-width: 860px;
+      width: 100%;
+    }
+
+    .farm-panel {
+      background: #c9b38b;
+      background-image: linear-gradient(145deg, #dac29c, #b89f79);
+      padding: 18px 14px 12px;
+      border-radius: 50px 50px 35px 35px;
+      box-shadow: inset 0 -8px 0 #8f7858, 0 10px 16px rgba(0,0,0,0.3);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px 12px;
+      margin-bottom: 16px;
+      padding: 4px;
+    }
+
+    .cell {
+      aspect-ratio: 1 / 1;
+      background: #4a3a28;
+      background-image: radial-gradient(circle at 30% 30%, #5d4c38, #362b1e);
+      border-radius: 30% 30% 40% 40%;
+      box-shadow: inset 0 -6px 0 #1f170f, 0 8px 10px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: 0.08s linear;
+      cursor: pointer;
+      padding: 3px;
+      position: relative;
+      min-width: 0;
+      min-height: 0;
+      touch-action: manipulation;
+    }
+
+    .cell:active {
+      transform: scale(0.93);
+      filter: brightness(0.9);
+    }
+
+    .plant-icon {
+      font-size: clamp(2rem, 9vw, 3.6rem);
+      line-height: 1;
+      filter: drop-shadow(2px 4px 4px rgba(0,0,0,0.3));
+      pointer-events: none;
+    }
+
+    .plant-type-badge {
+      font-size: clamp(0.35rem, 1.4vw, 0.65rem);
+      background: rgba(0,0,0,0.7);
+      color: #fff8e0;
+      padding: 0 5px;
+      border-radius: 20px;
+      margin-top: 1px;
+      letter-spacing: 0.2px;
+      backdrop-filter: blur(2px);
+      pointer-events: none;
+      white-space: nowrap;
+      font-weight: 600;
+    }
+
+    .water-indicator {
+      font-size: clamp(0.5rem, 2vw, 0.8rem);
+      font-weight: 700;
+      color: #2d5f8b;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(2px);
+      padding: 0 7px;
+      border-radius: 30px;
+      margin-top: 2px;
+      border: 1px solid #b3d0f0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .harvest-count-badge {
+      font-size: clamp(0.4rem, 1.6vw, 0.7rem);
+      background: #f7d56e;
+      color: #3d2f0e;
+      padding: 0 6px;
+      border-radius: 20px;
+      font-weight: 700;
+      margin-top: 1px;
+      border: 1px solid #b8942e;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .farm-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 6px 16px 6px;
+      background: #5e7b4b;
+      background: linear-gradient(0deg, #4f6d3d, #6b8f55);
+      border-radius: 50px;
+      margin-top: 4px;
+      box-shadow: inset 0 2px 6px #b9d6a3, 0 6px 0 #3b572b;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+    }
+
+    .stats-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      background: #2f4623;
+      padding: 3px 14px 3px 10px;
+      border-radius: 40px;
+      box-shadow: inset 0 1px 4px #7e9f6b;
+      color: #f7f1d9;
+      font-weight: 600;
+      font-size: 1rem;
+      letter-spacing: 0.3px;
+    }
+
+    .stats-item span {
+      background: #f9f3d9;
+      color: #2e4d1e;
+      padding: 0 10px;
+      border-radius: 30px;
+      font-size: 1.1rem;
+      line-height: 1.6;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .action-bar {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin: 14px 0 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: #fdeec2;
+      border: none;
+      padding: 8px 18px;
+      border-radius: 50px;
+      font-weight: 700;
+      font-size: 1rem;
+      color: #2d4d1e;
+      box-shadow: 0 7px 0 #a78758, 0 5px 10px rgba(0,0,0,0.3);
+      transition: all 0.04s ease-in;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      touch-action: manipulation;
+      flex: 1 1 auto;
+      justify-content: center;
+      min-width: 100px;
+      border: 1px solid #ffe7b0;
+    }
+
+    .btn:active {
+      transform: translateY(5px);
+      box-shadow: 0 2px 0 #8f6f3e;
+    }
+
+    .btn.reset {
+      background: #e5d0b0;
+      box-shadow: 0 7px 0 #a78b6b;
+      color: #3a2e1e;
+    }
+
+    .btn.sell {
+      background: #f7d56e;
+      box-shadow: 0 7px 0 #b8942e;
+      color: #3d2f0e;
+    }
+
+    .shop-panel {
+      margin-top: 12px;
+      padding: 10px 14px;
+      background: #d8c8a8;
+      background: linear-gradient(145deg, #e0d0b0, #c8b890);
+      border-radius: 40px;
+      box-shadow: inset 0 -4px 0 #9a8868;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: center;
+      gap: 8px 12px;
+    }
+
+    .shop-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      background: #2f4623;
+      padding: 4px 12px 4px 8px;
+      border-radius: 40px;
+      color: #f7f1d9;
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: 0.1s;
+      border: 2px solid transparent;
+      box-shadow: 0 3px 0 #1a2e12;
+    }
+
+    .shop-item:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #1a2e12;
+    }
+
+    .shop-item:hover {
+      border-color: #ffe7a0;
+    }
+
+    .shop-item .emoji {
+      font-size: 1.5rem;
+    }
+
+    .shop-item .cost {
+      background: #f9f3d9;
+      color: #2e4d1e;
+      padding: 0 8px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+    }
+
+    .message-area {
+      margin-top: 12px;
+      padding: 5px 10px;
+      text-align: center;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #1d3213;
+      background: #e6ddc0;
+      border-radius: 50px;
+      min-height: 2.6rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid #b8a781;
+      box-shadow: inset 0 2px 6px #b8a070;
+      line-height: 1.3;
+    }
+
+    @media (max-width: 550px) {
+      .grid { gap: 8px; }
+      .farm-stats { flex-direction: column; align-items: stretch; }
+      .stats-item { justify-content: center; }
+      .action-bar .btn { min-width: 80px; font-size: 0.85rem; padding: 6px 12px; }
+      .shop-item { font-size: 0.8rem; padding: 3px 8px; }
+    }
+  </style>
+</head>
+<body>
+<div class="game-wrapper">
+  <div class="farm-panel">
+    <div class="grid" id="gridContainer"></div>
+
+    <div class="farm-stats">
+      <div class="stats-item">🌾 урожай <span id="harvestCount">0</span></div>
+      <div class="stats-item">💧 вода <span id="waterCount">10</span></div>
+      <div class="stats-item">🪙 монеты <span id="coinCount">5</span></div>
+    </div>
+
+    <div class="action-bar">
+      <button class="btn sell" id="sellBtn">💰 продать урожай</button>
+      <button class="btn reset" id="resetBtn">🔄 новая ферма</button>
+    </div>
+
+    <div class="shop-panel" id="shopPanel">
+      <span style="font-weight:700;color:#2d4d1e;font-size:0.95rem;">🏪 магазин:</span>
+    </div>
+
+    <div class="message-area" id="messageDisplay">🌱 кликни по грядке: посадить / полить / собрать</div>
+  </div>
+</div>
+
+<script>
+  (function() {
+    const ROWS = 4;
+    const COLS = 4;
+    const TOTAL_CELLS = ROWS * COLS;
+
+    // 8 растений — у тыквы правильные эмодзи для всех стадий
+    const PLANT_TYPES = [
+      { id: 'tomato', name: '🍅', label: 'томат', waterNeed: 2, emoji: ['🌰','🌱','🌿','🍅'], cost: 1, maxHarvests: 1, harvestValue: 1 },
+      { id: 'carrot', name: '🥕', label: 'морковь', waterNeed: 1, emoji: ['🌰','🌱','🌿','🥕'], cost: 1, maxHarvests: 1, harvestValue: 1 },
+      { id: 'corn', name: '🌽', label: 'кукуруза', waterNeed: 3, emoji: ['🌰','🌱','🌿','🌽'], cost: 1, maxHarvests: 1, harvestValue: 1 },
+      { id: 'wheat', name: '🌾', label: 'пшеница', waterNeed: 2, emoji: ['🌰','🌱','🌾','🌾'], cost: 1, maxHarvests: 1, harvestValue: 1 },
+      { id: 'pumpkin', name: '🎃', label: 'тыква', waterNeed: 4, emoji: ['🌰','🌱','🌿','🎃'], cost: 3, maxHarvests: 1, harvestValue: 3 },
+      { id: 'strawberry', name: '🍓', label: 'клубника', waterNeed: 1, emoji: ['🌰','🌱','🌿','🍓'], cost: 2, maxHarvests: 2, harvestValue: 1 },
+      { id: 'pepper', name: '🌶️', label: 'перец', waterNeed: 2, emoji: ['🌰','🌱','🌿','🌶️'], cost: 2, maxHarvests: 2, harvestValue: 1 },
+      { id: 'flower', name: '🌻', label: 'цветок', waterNeed: 1, emoji: ['🌰','🌱','🌿','🌻'], cost: 1, maxHarvests: 1, harvestValue: 1 }
+    ];
+
+    let plants = [];
+    let harvestCount = 0;
+    let waterCount = 10;
+    let coins = 5;
+
+    const gridEl = document.getElementById('gridContainer');
+    const harvestSpan = document.getElementById('harvestCount');
+    const waterSpan = document.getElementById('waterCount');
+    const coinSpan = document.getElementById('coinCount');
+    const messageEl = document.getElementById('messageDisplay');
+    const shopPanel = document.getElementById('shopPanel');
+
+    let msgTimeout = null;
+
+    function setMessage(text, isImportant = false) {
+      if (msgTimeout) {
+        clearTimeout(msgTimeout);
+        msgTimeout = null;
+      }
+      messageEl.textContent = text;
+      if (!isImportant) {
+        msgTimeout = setTimeout(() => {
+          if (messageEl.textContent === text) {
+            messageEl.textContent = '🌱 кликни по грядке: посадить / полить / собрать';
+          }
+          msgTimeout = null;
+        }, 2800);
+      }
+    }
+
+    function updateUI() {
+      harvestSpan.textContent = harvestCount;
+      waterSpan.textContent = waterCount;
+      coinSpan.textContent = coins;
+      renderGrid();
+      renderShop();
+    }
+
+    function renderGrid() {
+      gridEl.innerHTML = '';
+      for (let i = 0; i < TOTAL_CELLS; i++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        cell.dataset.index = i;
+
+        const plant = plants[i];
+        let icon = '🟫';
+        let waterText = '';
+        let typeLabel = '';
+        let harvestInfo = '';
+
+        if (plant) {
+          const type = PLANT_TYPES[plant.typeIndex];
+          const stage = plant.stage;
+          // Используем эмодзи из массива, тыква теперь правильно отображается
+          icon = type.emoji[stage] || '🌱';
+          const w = plant.water;
+          waterText = w > 0 ? `💧${w}` : '💧0';
+          typeLabel = type.label;
+          
+          if (plant.maxHarvests > 1) {
+            harvestInfo = `📦${plant.harvestsMade}/${plant.maxHarvests}`;
+          } else if (plant.harvestValue > 1) {
+            harvestInfo = `⭐×${plant.harvestValue}`;
+          }
+        }
+
+        const iconSpan = document.createElement('div');
+        iconSpan.className = 'plant-icon';
+        iconSpan.textContent = icon;
+
+        const badgeSpan = document.createElement('div');
+        badgeSpan.className = 'plant-type-badge';
+        badgeSpan.textContent = typeLabel;
+
+        const waterSpanEl = document.createElement('div');
+        waterSpanEl.className = 'water-indicator';
+        waterSpanEl.textContent = waterText;
+
+        cell.appendChild(iconSpan);
+        cell.appendChild(badgeSpan);
+        cell.appendChild(waterSpanEl);
+
+        if (harvestInfo) {
+          const harvestBadge = document.createElement('div');
+          harvestBadge.className = 'harvest-count-badge';
+          harvestBadge.textContent = harvestInfo;
+          cell.appendChild(harvestBadge);
+        }
+
+        cell.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const idx = parseInt(cell.dataset.index, 10);
+          handleCellClick(idx);
+        });
+
+        gridEl.appendChild(cell);
+      }
+    }
+
+    function renderShop() {
+      shopPanel.innerHTML = '<span style="font-weight:700;color:#2d4d1e;font-size:0.95rem;">🏪 магазин:</span>';
+      PLANT_TYPES.forEach((type, idx) => {
+        const item = document.createElement('div');
+        item.className = 'shop-item';
+        let info = '';
+        if (type.maxHarvests > 1) info = ` ${type.maxHarvests}ур`;
+        if (type.harvestValue > 1 && type.maxHarvests === 1) info = ` ⭐×${type.harvestValue}`;
+        item.innerHTML = `<span class="emoji">${type.name}</span> ${type.label}${info} <span class="cost">🪙${type.cost}</span>`;
+        item.addEventListener('click', (e) => {
+          e.stopPropagation();
+          buySeed(idx);
+        });
+        shopPanel.appendChild(item);
+      });
+    }
+
+    function buySeed(typeIndex) {
+      const type = PLANT_TYPES[typeIndex];
+      if (coins < type.cost) {
+        setMessage(`❌ не хватает монет! нужно ${type.cost} 🪙`, false);
+        return;
+      }
+
+      let emptyIndex = -1;
+      for (let i = 0; i < plants.length; i++) {
+        if (plants[i] === null) {
+          emptyIndex = i;
+          break;
+        }
+      }
+
+      if (emptyIndex === -1) {
+        setMessage('🌱 все грядки заняты! собери урожай', false);
+        return;
+      }
+
+      coins -= type.cost;
+      plants[emptyIndex] = { 
+        typeIndex: typeIndex, 
+        stage: 0, 
+        water: 1,
+        harvestsMade: 0,
+        maxHarvests: type.maxHarvests,
+        harvestValue: type.harvestValue
+      };
+      setMessage(`🌱 куплен и посажен ${type.label}!`, false);
+      updateUI();
+    }
+
+    function handleCellClick(index) {
+      const plant = plants[index];
+
+      if (!plant) {
+        setMessage('🌱 купи семена в магазине и посади!', false);
+        return;
+      }
+
+      const { typeIndex, stage, water, harvestsMade, maxHarvests, harvestValue } = plant;
+      const type = PLANT_TYPES[typeIndex];
+
+      // Стадия 3 = созрело, собираем
+      if (stage === 3) {
+        if (harvestsMade >= maxHarvests) {
+          setMessage(`⚠️ ${type.label} уже собрал${maxHarvests > 1 ? 'а' : ''} всё! убери и посади новое`, false);
+          return;
+        }
+
+        const gained = harvestValue;
+        harvestCount += gained;
+        plant.harvestsMade += 1;
+
+        if (plant.harvestsMade >= maxHarvests) {
+          plants[index] = null;
+          setMessage(`🍅 собран ${type.label}! +${gained} урожая (больше не даст)`, false);
+        } else {
+          plant.stage = 2;
+          plant.water = 1;
+          setMessage(`🍅 собран ${type.label}! +${gained} урожая (осталось ${maxHarvests - plant.harvestsMade})`, false);
+        }
+        updateUI();
+        return;
+      }
+
+      // Полив
+      if (waterCount <= 0) {
+        setMessage('💧 нет воды! продай урожай за воду', false);
+        return;
+      }
+
+      const newWater = Math.min(water + 1, 3);
+      plant.water = newWater;
+      waterCount -= 1;
+
+      const need = type.waterNeed;
+      // Рост: если влаги достаточно и стадия < 3
+      if (plant.water >= need && plant.stage < 3) {
+        plant.stage = plant.stage + 1;
+        plant.water = 1;
+        if (plant.stage === 3) {
+          setMessage(`🎉 ${type.label} созрел! собери урожай`, false);
+        } else {
+          setMessage(`🌿 ${type.label} вырос до стадии ${plant.stage+1}`, false);
+        }
+      } else {
+        setMessage(`💧 полив! влажность ${plant.water}/${need}`, false);
+      }
+
+      updateUI();
+    }
+
+    function sellHarvest() {
+      if (harvestCount <= 0) {
+        setMessage('🌾 нет урожая для продажи!', false);
+        return;
+      }
+
+      const earnedWater = harvestCount * 6;
+      waterCount += earnedWater;
+      coins += harvestCount;
+      harvestCount = 0;
+
+      setMessage(`💰 продано! +${earnedWater} 💧 воды (${coins} монет)`, true);
+      updateUI();
+    }
+
+    function resetGame() {
+      plants = new Array(TOTAL_CELLS).fill(null);
+      
+      const seedCount = 4 + Math.floor(Math.random() * 4);
+      const indices = Array.from({ length: TOTAL_CELLS }, (_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
+      }
+      for (let i = 0; i < Math.min(seedCount, TOTAL_CELLS); i++) {
+        const idx = indices[i];
+        const typeIdx = Math.floor(Math.random() * PLANT_TYPES.length);
+        const type = PLANT_TYPES[typeIdx];
+        plants[idx] = { 
+          typeIndex: typeIdx, 
+          stage: 0, 
+          water: 1,
+          harvestsMade: 0,
+          maxHarvests: type.maxHarvests,
+          harvestValue: type.harvestValue
+        };
+      }
+
+      harvestCount = 0;
+      waterCount = 10;
+      coins = 5;
+      updateUI();
+      setMessage('🌱 новая ферма! покупай семена в магазине', false);
+      if (msgTimeout) {
+        clearTimeout(msgTimeout);
+        msgTimeout = null;
+      }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+      resetGame();
+      document.getElementById('sellBtn').addEventListener('click', sellHarvest);
+      document.getElementById('resetBtn').addEventListener('click', resetGame);
+    });
+
+  })();
+</script>
+</body>
+</html>
